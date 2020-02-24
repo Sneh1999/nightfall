@@ -12,8 +12,11 @@ completedSetupList=""
 selectedSetupsIndexes=""
 declare -i index=0
 
+# Move files based on config HASH_TYPE
+docker-compose run --rm hash-switch
+
 # Get available trusted setup names, excluding the 'common' directory
-pushd zkp/code/gm17/
+pushd zkp/code/gm17
 for d in *
 do
   if [ -d "$d" ] && [ "$d" != "common" ]
@@ -40,7 +43,7 @@ generateSetups(){
   selectedSetupsIndexes=$(echo $selectedSetupsIndexes | tr "," "\n")
   for i in $selectedSetupsIndexes
   do
-    npm run setup -- -f gm17/${setups[$i-1]}
+    npm run setup -- -f ${setups[$i-1]}
   done
 }
 

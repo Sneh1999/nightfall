@@ -177,6 +177,8 @@ describe('f-token-controller.js tests', () => {
     // now Bob should have 40 (E) ETH
   });
 
+  /*
+
   test('Should mint another ERC-20 commitment Z_B_G for Bob for asset G', async () => {
     const { commitment: zTest, commitmentIndex: zIndex } = await erc20.mint(
       G,
@@ -250,4 +252,7 @@ describe('f-token-controller.js tests', () => {
     console.log('accounts[3]', bal2.toNumber());
     expect(parseInt(F, 16)).toEqual(bal2 - bal1);
   });
+  */
+
+
 });
