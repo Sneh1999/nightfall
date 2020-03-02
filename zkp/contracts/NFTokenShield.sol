@@ -96,14 +96,14 @@ contract NFTokenShield is Ownable, MerkleTree {
     /**
     The mint function creates ('mints') a new commitment and stores it in the merkleTree
     */
-    function mint(uint256[] calldata _proof, uint256[] calldata _inputs, uint256 _tokenId, bytes32 _commitment) external {
+    function mint(bytes32 tokenContractAddress, uint256[] calldata _proof, uint256[] calldata _inputs, uint256 _tokenId, bytes32 _commitment) external {
 
         // gas measurement:
         uint256 gasCheckpoint = gasleft();
 
         // Check that the publicInputHash equals the hash of the 'public inputs':
         bytes31 publicInputHash = bytes31(bytes32(_inputs[0])<<8);
-        bytes31 publicInputHashCheck = bytes31(sha256(abi.encodePacked(_tokenId, _commitment))<<8);
+        bytes31 publicInputHashCheck = bytes31(sha256(abi.encodePacked(tokenContractAddress, _tokenId, _commitment))<<8);
         require(publicInputHashCheck == publicInputHash, "publicInputHash cannot be reconciled");
 
         // gas measurement:
@@ -123,7 +123,8 @@ contract NFTokenShield is Ownable, MerkleTree {
         roots[latestRoot] = latestRoot; // and save the new root to the list of roots
 
         // Finally, transfer token from the sender to this contract address
-        nfToken.safeTransferFrom(msg.sender, address(this), _tokenId);
+        ERC721Interface tokenContract = ERC721Interface(address(uint160(uint256(tokenContractAddress))));
+        tokenContract.safeTransferFrom(msg.sender, address(this), _tokenId);
 
         // gas measurement:
         gasUsedByShieldContract = gasUsedByShieldContract + gasCheckpoint - gasleft();
@@ -175,14 +176,14 @@ contract NFTokenShield is Ownable, MerkleTree {
     /**
     The burn function burns a commitment and transfers the asset held within the commiment to the address payTo
     */
-    function burn(uint256[] memory _proof, uint256[] memory _inputs, bytes32 _root, bytes32 _nullifier, uint256 _tokenId, uint256 _payTo) public {
+    function burn(bytes32 tokenContractAddress, uint256[] memory _proof, uint256[] memory _inputs, bytes32 _root, bytes32 _nullifier, uint256 _tokenId, uint256 _payTo) public {
 
         // gas measurement:
         uint256 gasCheckpoint = gasleft();
 
         // Check that the publicInputHash equals the hash of the 'public inputs':
         bytes31 publicInputHash = bytes31(bytes32(_inputs[0])<<8);
-        bytes31 publicInputHashCheck = bytes31(sha256(abi.encodePacked(_root, _nullifier, _tokenId, _payTo))<<8); // Note that although _payTo represents an address, we have declared it as a uint256. This is because we want it to be abi-encoded as a bytes32 (left-padded with zeros) so as to match the padding in the hash calculation performed within the zokrates proof.
+        bytes31 publicInputHashCheck = bytes31(sha256(abi.encodePacked(tokenContractAddress, _root, _nullifier, _tokenId, _payTo))<<8);
         require(publicInputHashCheck == publicInputHash, "publicInputHash cannot be reconciled");
 
         // gas measurement:
@@ -206,7 +207,8 @@ contract NFTokenShield is Ownable, MerkleTree {
 
         //Finally, transfer NFToken from this contract address to the nominated address
         address payToAddress = address(_payTo); // we passed _payTo as a uint256, to ensure the packing was correct within the sha256() above
-        nfToken.safeTransferFrom(address(this), payToAddress, _tokenId);
+        ERC721Interface tokenContract = ERC721Interface(address(uint160(uint256(tokenContractAddress))));
+        tokenContract.safeTransferFrom(address(this), payToAddress, _tokenId);
 
         emit Burn(_nullifier);
 

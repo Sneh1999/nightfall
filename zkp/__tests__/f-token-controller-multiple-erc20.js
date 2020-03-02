@@ -5,7 +5,7 @@ import bc from '../src/web3';
 
 import utils from '../src/zkpUtils';
 import controller from '../src/f-token-controller';
-import { getTruffleContractInstance } from '../src/contractUtils';
+import { getContractAddress, getTruffleContractInstance } from '../src/contractUtils';
 
 jest.setTimeout(7200000);
 
@@ -41,11 +41,14 @@ let zInd3;
 let accounts;
 let fTokenShieldJson;
 let fTokenShieldAddress;
+let erc20Address;
 
 beforeAll(async () => {
   if (!(await bc.isConnected())) await bc.connect();
   accounts = await (await bc.connection()).eth.getAccounts();
   const { contractJson, contractInstance } = await getTruffleContractInstance('FTokenShield');
+  erc20Address = await getContractAddress('FToken');
+  const erc20AddressPadded = `0x${utils.strip0x(erc20Address).padStart(64, '0')}`;
   fTokenShieldAddress = contractInstance.address;
   fTokenShieldJson = contractJson;
   // blockchainOptions = { account, fTokenShieldJson, fTokenShieldAddress };
@@ -56,14 +59,14 @@ beforeAll(async () => {
   // pkA = utils.ensure0x(utils.strip0x(utils.hash(skA)).padStart(32, '0'));
   pkA = utils.hash(skA);
   pkB = utils.hash(skB);
-  Z_A_C = utils.concatenateThenHash(C, pkA, S_A_C);
-  Z_A_D = utils.concatenateThenHash(D, pkA, S_A_D);
+  Z_A_C = utils.concatenateThenHash(erc20AddressPadded, C, pkA, S_A_C);
+  Z_A_D = utils.concatenateThenHash(erc20AddressPadded, D, pkA, S_A_D);
   S_B_G = await utils.rndHex(32);
   sBToEH = await utils.rndHex(32);
   sBToBI = await utils.rndHex(32);
-  Z_B_G = utils.concatenateThenHash(G, pkB, S_B_G);
-  Z_B_E = utils.concatenateThenHash(E, pkB, sAToBE);
-  Z_A_F = utils.concatenateThenHash(F, pkA, sAToAF);
+  Z_B_G = utils.concatenateThenHash(erc20AddressPadded, G, pkB, S_B_G);
+  Z_B_E = utils.concatenateThenHash(erc20AddressPadded, E, pkB, sAToBE);
+  Z_A_F = utils.concatenateThenHash(erc20AddressPadded, F, pkA, sAToAF);
 });
 
 // eslint-disable-next-line no-undef
@@ -115,6 +118,7 @@ describe('f-token-controller.js tests', () => {
       pkA,
       S_A_C,
       {
+        erc20Address,
         account: accounts[0],
         fTokenShieldJson,
         fTokenShieldAddress,
@@ -136,6 +140,7 @@ describe('f-token-controller.js tests', () => {
       pkA,
       S_A_D,
       {
+        erc20Address,
         account: accounts[0],
         fTokenShieldJson,
         fTokenShieldAddress,
@@ -164,6 +169,7 @@ describe('f-token-controller.js tests', () => {
       pkB,
       skA,
       {
+        erc20Address,
         account: accounts[0],
         fTokenShieldJson,
         fTokenShieldAddress,
@@ -183,6 +189,7 @@ describe('f-token-controller.js tests', () => {
       pkB,
       S_B_G,
       {
+        erc20Address,
         account: accounts[1],
         fTokenShieldJson,
         fTokenShieldAddress,
@@ -211,6 +218,7 @@ describe('f-token-controller.js tests', () => {
       pkE,
       skB,
       {
+        erc20Address,
         account: accounts[1],
         fTokenShieldJson,
         fTokenShieldAddress,
@@ -235,6 +243,7 @@ describe('f-token-controller.js tests', () => {
       Z_A_F,
       zInd2 + 2,
       {
+        erc20Address,
         account: accounts[0],
         tokenReceiver: accounts[3],
         fTokenShieldJson,
